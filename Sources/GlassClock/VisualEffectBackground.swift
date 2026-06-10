@@ -6,9 +6,13 @@ import AppKit
 struct VisualEffectBackground: NSViewRepresentable {
     func makeNSView(context: Context) -> NSVisualEffectView {
         let view = NSVisualEffectView()
-        view.material = .hudWindow
+        // .fullScreenUI has the lightest tint of the behind-window
+        // materials, so more of what's underneath shows through.
+        view.material = .fullScreenUI
         view.blendingMode = .behindWindow
         view.state = .active
+        // Fade the material's frost so the glass reads nearly clear.
+        view.alphaValue = 0.85
         view.wantsLayer = true
         view.layer?.cornerRadius = 24
         view.layer?.cornerCurve = .continuous
