@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "GlassClock",
-    platforms: [.macOS(.v13)],
+    platforms: [.macOS(.v15)],
     targets: [
         .target(name: "GlassClockCore"),
         .executableTarget(name: "GlassClock", dependencies: ["GlassClockCore"]),
