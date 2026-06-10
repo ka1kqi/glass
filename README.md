@@ -26,6 +26,8 @@ Or build a drag-and-drop installer disk image:
 ```
 
 - Drag the clock anywhere; its position is remembered.
+- Pinch or scroll on the clock to make it bigger or smaller (0.5x–2.5x);
+  the size is remembered too.
 - Quit from the clock icon in the menu bar.
 - Follows your system 12/24-hour setting; adapts to light/dark mode.
 

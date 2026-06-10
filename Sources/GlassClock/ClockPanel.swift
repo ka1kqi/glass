@@ -21,4 +21,22 @@ final class ClockPanel: NSPanel {
 
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
+
+    /// Called with a multiplicative zoom factor when the user pinches or
+    /// scrolls on the panel.
+    var onZoom: ((CGFloat) -> Void)?
+
+    override func magnify(with event: NSEvent) {
+        onZoom?(clampedFactor(1 + event.magnification))
+    }
+
+    override func scrollWheel(with event: NSEvent) {
+        onZoom?(clampedFactor(1 + event.scrollingDeltaY * 0.005))
+    }
+
+    /// Keeps one wild event (a flicked wheel, a jumpy pinch) from slamming
+    /// the scale to its bounds in a single step.
+    private func clampedFactor(_ factor: CGFloat) -> CGFloat {
+        min(max(factor, 0.8), 1.25)
+    }
 }
