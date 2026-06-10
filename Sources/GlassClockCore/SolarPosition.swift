@@ -25,6 +25,7 @@ public enum SolarPosition {
         // Greenwich mean sidereal time, in hours, then the sun's local
         // hour angle in degrees.
         let gmst = 18.697374558 + 24.06570982441908 * d
+        // GMST grows unboundedly; wrappedDegrees normalizes after ×15.
         let localSiderealDegrees = (gmst * 15 + longitude).wrappedDegrees
         let hourAngle = (localSiderealDegrees - rightAscension).wrappedDegrees
 

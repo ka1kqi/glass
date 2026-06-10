@@ -18,17 +18,25 @@ private func utc(_ year: Int, _ month: Int, _ day: Int, _ hour: Int, _ minute: I
 }
 
 @Test func summerSolsticeMidnightAtGreenwichIsBelowHorizon() {
-    // Lower culmination: declination − (90 − latitude) ≈ −15°.
+    // At local midnight the sun is far below the horizon: lat + dec − 90 ≈ −15°.
     let e = SolarPosition.elevation(
         latitude: 51.4779, longitude: 0, date: utc(2026, 6, 21, 0, 0))
     #expect(e < -10)
 }
 
 @Test func equinoxSolarNoonAtEquatorIsNearZenith() {
-    // Solar noon at longitude 0 on 2026-03-20 is ~12:07 UTC (equation of time).
+    // Equinox solar noon at lon 0 is ~12:07 UTC (equation of time); even
+    // 12:00 already yields 88°, but 12:07 peaks closest to the zenith (~90°).
     let e = SolarPosition.elevation(
         latitude: 0, longitude: 0, date: utc(2026, 3, 20, 12, 7))
     #expect(e > 85)
+}
+
+@Test func southernHemisphereSummerNoonIsHigh() {
+    // Sydney near its summer solstice, local solar noon (~01:48 UTC).
+    let e = SolarPosition.elevation(
+        latitude: -33.86, longitude: 151.21, date: utc(2026, 12, 21, 1, 48))
+    #expect(e > 70)
 }
 
 @Test func polarNightStaysDark() {
