@@ -14,15 +14,32 @@ public final class ClockModel: ObservableObject {
 
     public init() {
         timeString = ClockFormatter.timeString(for: Date())
+
+        NotificationCenter.default.addObserver(
+            forName: .NSSystemClockDidChange, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.refresh() }
+        }
+
         tickLoop = Task { [weak self] in
             while true {
                 let interval = ClockFormatter.intervalToNextMinute(from: Date())
                 // +50ms so we land safely past the boundary.
-                try? await Task.sleep(
-                    nanoseconds: UInt64((interval + 0.05) * 1_000_000_000))
+                do {
+                    try await Task.sleep(
+                        nanoseconds: UInt64((interval + 0.05) * 1_000_000_000))
+                } catch {
+                    return  // cancelled — exit the loop instead of spinning
+                }
                 guard let self else { return }
-                self.timeString = ClockFormatter.timeString(for: Date())
+                self.refresh()
             }
         }
+    }
+
+    /// Re-reads the wall clock immediately. Called by the tick loop, and by
+    /// the app on wake-from-sleep and system clock changes.
+    public func refresh() {
+        timeString = ClockFormatter.timeString(for: Date())
     }
 }
