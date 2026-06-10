@@ -19,10 +19,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let size = NSSize(width: 340, height: 150)
         panel = ClockPanel(contentRect: NSRect(origin: .zero, size: size))
         panel.contentView = NSHostingView(rootView: ClockView(model: model))
-        panel.setFrameAutosaveName("GlassClockPanel")
-        if !isOnAnyScreen(panel.frame) {
+        if !panel.setFrameUsingName("GlassClockPanel") || !isOnAnyScreen(panel.frame) {
             panel.center()
         }
+        panel.setFrameAutosaveName("GlassClockPanel")
         panel.orderFrontRegardless()
     }
 
