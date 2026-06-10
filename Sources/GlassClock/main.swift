@@ -1,3 +1,6 @@
-import Foundation
+import AppKit
 
-// AppKit entry point added in Task 5.
+let app = NSApplication.shared
+let delegate = AppDelegate()
+app.delegate = delegate
+app.run()
