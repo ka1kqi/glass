@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let model = ClockModel()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if Installer.handOffToInstalledCopyIfNeeded() { return }
         NSApp.setActivationPolicy(.accessory)
         setUpPanel()
         setUpStatusItem()
@@ -30,10 +31,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(
             withLength: NSStatusItem.squareLength)
         statusItem.button?.image = NSImage(
-            systemSymbolName: "clock", accessibilityDescription: "GlassClock")
+            systemSymbolName: "clock", accessibilityDescription: "Glass")
         let menu = NSMenu()
         menu.addItem(NSMenuItem(
-            title: "Quit GlassClock",
+            title: "Quit Glass",
             action: #selector(NSApplication.terminate(_:)),
             keyEquivalent: "q"))
         statusItem.menu = menu

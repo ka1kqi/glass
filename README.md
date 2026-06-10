@@ -1,13 +1,28 @@
-# GlassClock
+# Glass
 
 A frosted-glass digital clock that floats above all your windows,
 in the native macOS style.
+
+## Install (DMG)
+
+Open `Glass.dmg` and launch Glass from it — the app installs itself to
+`/Applications` on first run (it skips the copy if it's already installed)
+and hands off to the installed copy, so you never end up with two.
+
+> Downloaded copies are ad-hoc signed; if macOS complains about an
+> unidentified developer, right-click the app and choose Open once.
 
 ## Build & run
 
 ```sh
 ./make-app.sh
-open build/GlassClock.app
+open build/Glass.app
+```
+
+Or build a drag-and-drop installer disk image:
+
+```sh
+./make-dmg.sh   # produces build/Glass.dmg
 ```
 
 - Drag the clock anywhere; its position is remembered.
