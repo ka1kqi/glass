@@ -19,8 +19,8 @@ cat > "$APP/Contents/Info.plist" <<'EOF'
     <key>CFBundleIdentifier</key><string>local.glass</string>
     <key>CFBundleName</key><string>Glass</string>
     <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>1.3.0</string>
-    <key>CFBundleVersion</key><string>4</string>
+    <key>CFBundleShortVersionString</key><string>1.4.0</string>
+    <key>CFBundleVersion</key><string>5</string>
     <key>LSMinimumSystemVersion</key><string>15.0</string>
     <key>LSUIElement</key><true/>
     <key>NSHighResolutionCapable</key><true/>

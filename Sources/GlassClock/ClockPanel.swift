@@ -32,12 +32,20 @@ final class ClockPanel: NSPanel {
     /// (screen coordinates, y up).
     var onDragEnded: ((CGVector) -> Void)?
 
+    /// Called with true on the first real movement of a drag and false on
+    /// release, so effects can rest while the panel is in motion. Plain
+    /// clicks never fire it.
+    var onDraggingChanged: ((Bool) -> Void)?
+
     /// Pointer offset from the frame origin while dragging, screen coords.
     private var dragOffset: NSPoint?
     /// Recent (timestamp, origin) samples for the release velocity.
     private var dragSamples: [(time: TimeInterval, origin: NSPoint)] = []
 
     override func mouseDown(with event: NSEvent) {
+        // At normal level (Float Above Windows off) a click brings the
+        // clock back in front of whatever covered it.
+        if level == .normal { orderFront(nil) }
         let mouse = NSEvent.mouseLocation
         dragOffset = NSPoint(x: mouse.x - frame.origin.x, y: mouse.y - frame.origin.y)
         dragSamples = [(event.timestamp, frame.origin)]
@@ -45,6 +53,7 @@ final class ClockPanel: NSPanel {
 
     override func mouseDragged(with event: NSEvent) {
         guard let offset = dragOffset else { return }
+        if dragSamples.count == 1 { onDraggingChanged?(true) }
         let mouse = NSEvent.mouseLocation
         setFrameOrigin(NSPoint(x: mouse.x - offset.x, y: mouse.y - offset.y))
         dragSamples.append((event.timestamp, frame.origin))
@@ -56,6 +65,7 @@ final class ClockPanel: NSPanel {
         dragOffset = nil
         // A plain click (no mouseDragged samples) must not nudge the panel.
         guard dragSamples.count > 1 else { dragSamples = []; return }
+        onDraggingChanged?(false)
         let velocity = Self.releaseVelocity(from: dragSamples, releasedAt: event.timestamp)
         dragSamples = []
         onDragEnded?(velocity)

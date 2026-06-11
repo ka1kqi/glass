@@ -37,11 +37,17 @@ Or build a drag-and-drop installer disk image:
   offline from your timezone; no location permission). The glass edge
   catches light from your cursor, and a subtle sheen sweeps across each
   minute change.
-- The same menu has settings: Keep Mac Awake (`caffeinate`), Keep Display
-  Awake (`caffeinate -d`), and an off-by-default Hourly Chime (a soft
-  synthesized glass ting) — all remembered across launches.
-- Ambient effects pause automatically when the clock is hidden, the screen
-  sleeps, Low Power Mode is on, or Reduce Motion is set.
+- The same menu has settings, all remembered across launches: Float Above
+  Windows (off lets other windows cover the clock; click it to bring it
+  back forward), Keep Mac Awake (`caffeinate`), Keep Display Awake
+  (`caffeinate -d`), Lighting Effects (the cursor-lit rim and minute
+  sheen), and an off-by-default Hourly Chime (a soft synthesized glass
+  ting).
+- Effectively zero CPU at rest: the aurora drifts as a render-server
+  animation and the rim light is driven by mouse events, so the app does
+  no per-frame work. Ambient effects also pause automatically when the
+  clock is hidden, dragged, the screen sleeps, Low Power Mode is on, or
+  Reduce Motion is set.
 - Follows your system 12/24-hour setting; adapts to light/dark mode.
   Requires macOS 15.
 

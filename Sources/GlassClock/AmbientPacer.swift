@@ -15,6 +15,7 @@ final class AmbientPacer: ObservableObject {
 
     private weak var window: NSWindow?
     private var screenAsleep = false
+    private var dragging = false
 
     /// Begins observing; call once after the panel exists.
     func start(window: NSWindow) {
@@ -58,12 +59,21 @@ final class AmbientPacer: ObservableObject {
         refresh()
     }
 
+    /// Rests the effects while the user drags the panel, keeping the main
+    /// thread clear for move events.
+    func setDragging(_ flag: Bool) {
+        guard flag != dragging else { return }
+        dragging = flag
+        refresh()
+    }
+
     private func refresh() {
         reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         let occluded = !(window?.occlusionState.contains(.visible) ?? true)
         audioPaused = screenAsleep || ProcessInfo.processInfo.isLowPowerModeEnabled
         paused = screenAsleep
             || occluded
+            || dragging
             || ProcessInfo.processInfo.isLowPowerModeEnabled
             || reduceMotion
     }

@@ -9,8 +9,11 @@ struct ClockView: View {
     @ObservedObject var zoom: ZoomModel
     @ObservedObject var design: DesignModel
     @ObservedObject var pacer: AmbientPacer
-    /// Panel frame in screen coordinates, for the cursor-lit rim.
-    var windowFrame: () -> NSRect? = { nil }
+    @ObservedObject var lighting: LightingModel
+    /// Deliberately NOT @ObservedObject: only SpecularRimOverlay reads the
+    /// published values, and observing here would re-run this whole body
+    /// at up to 30Hz while the cursor moves.
+    let rim: RimLightModel
 
     var body: some View {
         let radius = 24 * zoom.scale
@@ -31,18 +34,21 @@ struct ClockView: View {
                 .animation(.easeInOut(duration: 0.4), value: design.designID)
             }
             .overlay {
-                MinuteGlintOverlay(
-                    trigger: model.timeString,
-                    enabled: !pacer.paused,   // paused subsumes Reduce Motion
-                    cornerRadius: radius)
+                if lighting.isOn {
+                    MinuteGlintOverlay(
+                        trigger: model.timeString,
+                        enabled: !pacer.paused,   // paused subsumes Reduce Motion
+                        cornerRadius: radius)
+                }
             }
             .overlay {
-                let current = design.current
+                // The rim model is gated by pacer + lighting, so the arc
+                // pins to zero (plain hairline) whenever effects are off.
+                // The tint refreshes when the minute tick re-runs body.
                 SpecularRimOverlay(
-                    paused: pacer.paused,
+                    light: rim,
                     cornerRadius: radius,
-                    windowFrame: windowFrame,
-                    tint: { current.rimTint(at: $0) })
+                    tint: design.current.rimTint(at: Date()))
             }
     }
 }
