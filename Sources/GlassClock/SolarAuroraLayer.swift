@@ -7,8 +7,8 @@ import GlassClockCore
 struct SolarAuroraLayer: View {
     var paused: Bool
 
-    /// Resolved once per launch; a stale location only shifts the palette
-    /// by minutes, invisible at this opacity.
+    /// Resolved once per launch. Crossing timezones mid-run shifts the
+    /// palette until relaunch — acceptable for ambient decoration.
     private static let location = TimeZoneLocation.coordinates()
 
     var body: some View {

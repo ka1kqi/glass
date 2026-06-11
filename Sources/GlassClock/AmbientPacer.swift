@@ -9,6 +9,9 @@ final class AmbientPacer: ObservableObject {
     @Published private(set) var paused = false
     /// Reduce Motion also pauses, but glint/toss need it separately.
     @Published private(set) var reduceMotion = false
+    /// Audio-feature gate: only sleep and Low Power Mode silence sound —
+    /// occlusion and Reduce Motion are visual concerns.
+    @Published private(set) var audioPaused = false
 
     private weak var window: NSWindow?
     private var screenAsleep = false
@@ -58,6 +61,7 @@ final class AmbientPacer: ObservableObject {
     private func refresh() {
         reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         let occluded = !(window?.occlusionState.contains(.visible) ?? true)
+        audioPaused = screenAsleep || ProcessInfo.processInfo.isLowPowerModeEnabled
         paused = screenAsleep
             || occluded
             || ProcessInfo.processInfo.isLowPowerModeEnabled

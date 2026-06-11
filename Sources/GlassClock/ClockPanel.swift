@@ -54,6 +54,8 @@ final class ClockPanel: NSPanel {
     override func mouseUp(with event: NSEvent) {
         guard dragOffset != nil else { return }
         dragOffset = nil
+        // A plain click (no mouseDragged samples) must not nudge the panel.
+        guard dragSamples.count > 1 else { dragSamples = []; return }
         let velocity = Self.releaseVelocity(from: dragSamples, releasedAt: event.timestamp)
         dragSamples = []
         onDragEnded?(velocity)

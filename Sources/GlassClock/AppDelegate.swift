@@ -23,7 +23,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setUpPanel()
         setUpStatusItem()
         refreshOnWake()
-        chime.isPaused = { [weak self] in self?.pacer.paused ?? true }
+        chime.isPaused = { [weak self] in self?.pacer.audioPaused ?? true }
     }
 
     private func setUpPanel() {
