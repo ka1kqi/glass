@@ -54,7 +54,7 @@ final class ClockPanel: NSPanel {
     override func mouseUp(with event: NSEvent) {
         guard dragOffset != nil else { return }
         dragOffset = nil
-        let velocity = Self.releaseVelocity(from: dragSamples)
+        let velocity = Self.releaseVelocity(from: dragSamples, releasedAt: event.timestamp)
         dragSamples = []
         onDragEnded?(velocity)
     }
@@ -71,12 +71,16 @@ final class ClockPanel: NSPanel {
         }
     }
 
-    /// Velocity over the last ~120ms of samples, so pausing mid-drag
-    /// before releasing kills the toss.
-    static func releaseVelocity(from samples: [(time: TimeInterval, origin: NSPoint)]) -> CGVector {
-        guard let last = samples.last else { return .zero }
-        let recent = samples.filter { $0.time >= last.time - 0.12 }
-        guard let first = recent.first, last.time > first.time else { return .zero }
+    /// Velocity over the last ~120ms before release. Filtering against the
+    /// release timestamp (not the last drag sample) means a flick followed
+    /// by a motionless hold releases with zero velocity.
+    static func releaseVelocity(
+        from samples: [(time: TimeInterval, origin: NSPoint)],
+        releasedAt upTime: TimeInterval
+    ) -> CGVector {
+        let recent = samples.filter { $0.time >= upTime - 0.12 }
+        guard let first = recent.first, let last = recent.last,
+              last.time > first.time else { return .zero }
         let dt = last.time - first.time
         return CGVector(
             dx: (last.origin.x - first.origin.x) / dt,

@@ -12,7 +12,11 @@ struct SpecularRimOverlay: View {
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 15.0, paused: paused)) { _ in
-            let light = Self.light(panel: windowFrame(), mouse: NSEvent.mouseLocation)
+            // When paused the timeline stops re-rendering — render the
+            // plain hairline so a bright arc can't freeze on screen.
+            let light = paused
+                ? (angle: 0.0, intensity: 0.0)
+                : Self.light(panel: windowFrame(), mouse: NSEvent.mouseLocation)
             let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
             shape
                 .strokeBorder(.white.opacity(0.10), lineWidth: 1)

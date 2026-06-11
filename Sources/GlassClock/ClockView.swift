@@ -33,7 +33,7 @@ struct ClockView: View {
             .overlay {
                 MinuteGlintOverlay(
                     trigger: model.timeString,
-                    enabled: !pacer.reduceMotion,
+                    enabled: !pacer.paused,   // paused subsumes Reduce Motion
                     cornerRadius: radius)
             }
             .overlay {

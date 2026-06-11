@@ -4,7 +4,7 @@ import Foundation
 /// A soft synthesized glass "ting" on the hour. Off by default; persisted.
 @MainActor
 final class Chime {
-    private static let defaultsKey = "HourlyChime"
+    private static let defaultsKey = "GlassHourlyChime"
 
     var isOn: Bool {
         didSet {
