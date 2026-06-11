@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let design = DesignModel()
     private let pacer = AmbientPacer()
     private var zoomHaptics = ZoomHaptics(scale: 1)
+    private let chime = Chime()
     private var zoomObserver: AnyCancellable?
     private let keepMacAwake = SleepPreventer.systemSleep()
     private let keepDisplayAwake = SleepPreventer.displaySleep()
@@ -22,6 +23,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setUpPanel()
         setUpStatusItem()
         refreshOnWake()
+        chime.isPaused = { [weak self] in self?.pacer.paused ?? true }
     }
 
     private func setUpPanel() {
@@ -142,6 +144,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         displayAwakeItem.toolTip = "Stops the display from turning off while Glass runs (caffeinate -d)"
         menu.addItem(displayAwakeItem)
 
+        let chimeItem = NSMenuItem(
+            title: "Hourly Chime",
+            action: #selector(toggleChime(_:)),
+            keyEquivalent: "")
+        chimeItem.target = self
+        chimeItem.state = chime.isOn ? .on : .off
+        chimeItem.toolTip = "A soft glass ting on the hour"
+        menu.addItem(chimeItem)
+
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(
             title: "Quit Glass",
@@ -166,6 +177,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func toggleKeepDisplayAwake(_ sender: NSMenuItem) {
         keepDisplayAwake.toggle()
         sender.state = keepDisplayAwake.isOn ? .on : .off
+    }
+
+    @objc private func toggleChime(_ sender: NSMenuItem) {
+        chime.isOn.toggle()
+        sender.state = chime.isOn ? .on : .off
     }
 
     /// The model's minute tick uses a suspending clock, so after system
