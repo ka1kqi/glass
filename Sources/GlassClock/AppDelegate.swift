@@ -11,6 +11,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let zoom = ZoomModel()
     private let design = DesignModel()
     private let pacer = AmbientPacer()
+    private let lighting = LightingModel()
+    private let rim = RimLightModel()
     private var zoomHaptics = ZoomHaptics(scale: 1)
     private let chime = Chime()
     private var zoomObserver: AnyCancellable?
@@ -30,7 +32,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panel = ClockPanel(contentRect: NSRect(origin: .zero, size: ClockView.baseSize))
         let hosting = NSHostingView(rootView: ClockView(
             model: model, zoom: zoom, design: design, pacer: pacer,
-            windowFrame: { [weak self] in self?.panel?.frame }))
+            lighting: lighting, rim: rim))
         // The panel's frame is driven exclusively by resizePanel(for:).
         // Without this, the hosting view's auto-layout constraints fight
         // every frame change (snapping it back top-left-anchored) until
@@ -45,6 +47,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panel.onDragEnded = { [weak self] velocity in
             self?.settlePanel(velocity: velocity)
         }
+        panel.onDraggingChanged = { [weak self] dragging in
+            self?.pacer.setDragging(dragging)
+        }
         // Fires immediately with the persisted scale, which also normalizes
         // whatever size the frame autosave restored.
         zoomHaptics = ZoomHaptics(scale: zoom.scale)
@@ -54,6 +59,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         panel.orderFrontRegardless()
         pacer.start(window: panel)
+        rim.start(window: panel, pacer: pacer, lighting: lighting)
     }
 
     /// Resizes the panel around its center to match the zoom scale.
@@ -65,6 +71,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         frame.origin.y -= (newSize.height - frame.height) / 2
         frame.size = newSize
         panel.setFrame(frame, display: true)
+        rim.nudge()  // the rim geometry changed under a stationary cursor
     }
 
     /// Carries a little release velocity (the toss), then snaps to a
@@ -101,6 +108,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             context.timingFunction = CAMediaTimingFunction(controlPoints: 0.34, 1.3, 0.64, 1)
             panel.animator().setFrame(target, display: true)
         }
+        rim.nudge()  // the panel slid away under a stationary cursor
     }
 
     private func setUpStatusItem() {
@@ -144,6 +152,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         displayAwakeItem.toolTip = "Stops the display from turning off while Glass runs (caffeinate -d)"
         menu.addItem(displayAwakeItem)
 
+        let lightingItem = NSMenuItem(
+            title: "Lighting Effects",
+            action: #selector(toggleLighting(_:)),
+            keyEquivalent: "")
+        lightingItem.target = self
+        lightingItem.state = lighting.isOn ? .on : .off
+        lightingItem.toolTip = "Cursor-lit rim and the minute sheen"
+        menu.addItem(lightingItem)
+
         let chimeItem = NSMenuItem(
             title: "Hourly Chime",
             action: #selector(toggleChime(_:)),
@@ -177,6 +194,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func toggleKeepDisplayAwake(_ sender: NSMenuItem) {
         keepDisplayAwake.toggle()
         sender.state = keepDisplayAwake.isOn ? .on : .off
+    }
+
+    @objc private func toggleLighting(_ sender: NSMenuItem) {
+        lighting.isOn.toggle()
+        sender.state = lighting.isOn ? .on : .off
     }
 
     @objc private func toggleChime(_ sender: NSMenuItem) {

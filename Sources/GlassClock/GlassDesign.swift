@@ -34,7 +34,9 @@ struct SolarAuroraDesign: GlassDesign {
     let id = "solar-aurora"
     let name = "Solar Aurora"
     func ambientLayer(paused: Bool) -> AnyView {
-        AnyView(SolarAuroraLayer(paused: paused).overlay(GrainOverlay()))
+        // Grain is baked into the layer's rasterized image; the 20%
+        // opacity that used to live on the SwiftUI mesh moves out here.
+        AnyView(SolarAuroraLayer(paused: paused).opacity(0.2))
     }
 
     /// The rim catches the aurora's own light: the mesh's center color,

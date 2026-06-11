@@ -4,43 +4,33 @@ import AppKit
 /// The panel's hairline rim plus a soft specular arc on the side facing
 /// the mouse cursor, as if the cursor were a light source the glass
 /// catches. Full strength within ~150pt of the rim, gone beyond ~600pt.
+/// Renders only when `RimLightModel` publishes a change — no poll loop.
 struct SpecularRimOverlay: View {
-    var paused: Bool
+    @ObservedObject var light: RimLightModel
     var cornerRadius: CGFloat
-    /// Panel frame in screen coordinates (y up), polled per frame.
-    var windowFrame: () -> NSRect?
-    /// Color of the specular arc, sampled per frame so designs can tint
-    /// the reactive light to match their ambiance.
-    var tint: (Date) -> Color = { _ in .white }
+    /// Arc color; designs tint the reactive light to match their ambiance.
+    var tint: Color
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 15.0, paused: paused)) { context in
-            // When paused the timeline stops re-rendering — render the
-            // plain hairline so a bright arc can't freeze on screen.
-            let light = paused
-                ? (angle: 0.0, intensity: 0.0)
-                : Self.light(panel: windowFrame(), mouse: NSEvent.mouseLocation)
-            let arcColor = tint(context.date)
-            let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-            shape
-                .strokeBorder(.white.opacity(0.10), lineWidth: 1)
-                .overlay {
-                    if light.intensity > 0 {
-                        shape.strokeBorder(
-                            AngularGradient(
-                                stops: [
-                                    .init(color: arcColor.opacity(0.55 * light.intensity), location: 0),
-                                    .init(color: .clear, location: 0.18),
-                                    .init(color: .clear, location: 0.82),
-                                    .init(color: arcColor.opacity(0.55 * light.intensity), location: 1),
-                                ],
-                                center: .center,
-                                angle: .radians(light.angle)),
-                            lineWidth: 1)
-                    }
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        shape
+            .strokeBorder(.white.opacity(0.10), lineWidth: 1)
+            .overlay {
+                if light.intensity > 0 {
+                    shape.strokeBorder(
+                        AngularGradient(
+                            stops: [
+                                .init(color: tint.opacity(0.55 * light.intensity), location: 0),
+                                .init(color: .clear, location: 0.18),
+                                .init(color: .clear, location: 0.82),
+                                .init(color: tint.opacity(0.55 * light.intensity), location: 1),
+                            ],
+                            center: .center,
+                            angle: .radians(light.angle)),
+                        lineWidth: 1)
                 }
-        }
-        .allowsHitTesting(false)
+            }
+            .allowsHitTesting(false)
     }
 
     /// Angle (SwiftUI radians, y down) toward the cursor and a 0–1

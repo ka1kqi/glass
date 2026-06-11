@@ -23,10 +23,14 @@ enum Grain {
 }
 
 struct GrainOverlay: View {
+    /// On-screen strength; bake-time callers compensate for downstream
+    /// layer opacity (e.g. 0.2 baked × 0.2 layer ≈ the classic 4%).
+    var opacity: Double = 0.04
+
     var body: some View {
         Image(nsImage: Grain.image)
             .resizable(resizingMode: .tile)
-            .opacity(0.04)
+            .opacity(opacity)
             .blendMode(.overlay)
             .allowsHitTesting(false)
     }
