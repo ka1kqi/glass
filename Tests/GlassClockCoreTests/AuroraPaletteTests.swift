@@ -56,3 +56,18 @@ import Testing
     #expect(AuroraPalette.colors(forElevation: -12)[0] == AuroraColor(hex: 0x0B0B26))
     #expect(AuroraPalette.colors(forElevation: 25)[0] == AuroraColor(hex: 0xAFC8D8))
 }
+
+@Test func rimAccentLiftsCenterColorTowardWhite() {
+    let center = AuroraPalette.colors(forElevation: 5)[4]
+    let expected = AuroraColor.lerp(center, AuroraColor(red: 1, green: 1, blue: 1), 0.6)
+    #expect(AuroraPalette.rimAccent(forElevation: 5) == expected)
+}
+
+@Test func rimAccentAlwaysReadsAsLight() {
+    // The 0.6 lift toward white bounds every channel at ≥ 0.6, so the
+    // rim arc stays visibly bright even on the near-black night palette.
+    for elevation in stride(from: -90.0, through: 90.0, by: 5.0) {
+        let accent = AuroraPalette.rimAccent(forElevation: elevation)
+        #expect(accent.red >= 0.6 && accent.green >= 0.6 && accent.blue >= 0.6)
+    }
+}

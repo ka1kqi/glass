@@ -81,6 +81,17 @@ public enum AuroraPalette {
         return anchors.last!.colors
     }
 
+    /// The accent the rim's specular arc uses so reactive light matches
+    /// the aurora's time of day: the mesh's center color lifted 60% toward
+    /// white, which keeps every channel ≥ 0.6 — bright enough to read as
+    /// light even over the near-black night palette.
+    public static func rimAccent(forElevation elevation: Double) -> AuroraColor {
+        AuroraColor.lerp(
+            colors(forElevation: elevation)[4],
+            AuroraColor(red: 1, green: 1, blue: 1),
+            0.6)
+    }
+
     private static func palette(_ hex: UInt32...) -> [AuroraColor] {
         hex.map(AuroraColor.init(hex:))
     }

@@ -9,7 +9,8 @@ struct SolarAuroraLayer: View {
 
     /// Resolved once per launch. Crossing timezones mid-run shifts the
     /// palette until relaunch — acceptable for ambient decoration.
-    private static let location = TimeZoneLocation.coordinates()
+    /// Internal so SolarAuroraDesign's rim tint samples the same place.
+    static let location = TimeZoneLocation.coordinates()
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 15.0, paused: paused)) { context in
