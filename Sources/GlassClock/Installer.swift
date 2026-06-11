@@ -61,41 +61,51 @@ enum Installer {
     /// swaps the installed bundle for this one. Termination is a polite
     /// request, but Glass quits instantly — it holds no unsaved state.
     private static func replaceInstalledCopy() -> Bool {
-        if let bundleID = Bundle.main.bundleIdentifier {
-            let myPID = ProcessInfo.processInfo.processIdentifier
-            let stale = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
-                .filter { $0.processIdentifier != myPID }
-                .filter { $0.bundleURL?.path.hasPrefix("/Volumes/") != true }
-            stale.forEach { $0.terminate() }
-            // Wait for them to exit (briefly) so the handed-off copy
-            // doesn't see a dying instance and defer to it.
-            let deadline = Date().addingTimeInterval(2)
-            while stale.contains(where: { !$0.isTerminated }), Date() < deadline {
-                Thread.sleep(forTimeInterval: 0.05)
-            }
+        let stale = otherNonDMGInstances()
+        stale.forEach { $0.terminate() }
+        // Wait for them to exit (briefly) so the handed-off copy doesn't
+        // see a dying instance and defer to it. Poll the pids directly:
+        // NSRunningApplication.isTerminated only refreshes while the main
+        // run loop spins, which it doesn't during this blocking wait.
+        let pids = stale.map(\.processIdentifier)
+        let deadline = Date().addingTimeInterval(2)
+        while pids.contains(where: { kill($0, 0) == 0 }), Date() < deadline {
+            Thread.sleep(forTimeInterval: 0.05)
         }
+        // Copy beside the install first, then swap atomically, so a
+        // failure (disk full, permissions) never leaves /Applications
+        // without a working copy.
         let fm = FileManager.default
+        let staging = URL(fileURLWithPath: "/Applications/.Glass.upgrade.app")
         do {
-            try fm.removeItem(atPath: installedPath)
-            try fm.copyItem(atPath: Bundle.main.bundlePath, toPath: installedPath)
+            try? fm.removeItem(at: staging)
+            try fm.copyItem(at: URL(fileURLWithPath: Bundle.main.bundlePath), to: staging)
+            _ = try fm.replaceItemAt(URL(fileURLWithPath: installedPath), withItemAt: staging)
             return true
         } catch {
+            try? fm.removeItem(at: staging)
             return false
         }
+    }
+
+    /// Running copies of Glass other than this process and any DMG-hosted
+    /// ones (those hand off and quit by themselves).
+    private static func otherNonDMGInstances() -> [NSRunningApplication] {
+        guard let bundleID = Bundle.main.bundleIdentifier else { return [] }
+        let myPID = ProcessInfo.processInfo.processIdentifier
+        return NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
+            .filter { $0.processIdentifier != myPID }
+            .filter { $0.bundleURL?.path.hasPrefix("/Volumes/") != true }
     }
 
     /// If another copy of Glass is already running (other than one on a
     /// disk image, which will hand off and quit by itself), let it win so
     /// there is never more than one clock on screen.
     private static func deferToExistingInstance() -> Bool {
-        guard let bundleID = Bundle.main.bundleIdentifier else {
+        guard Bundle.main.bundleIdentifier != nil else {
             return false  // bare dev binary, no bundle — skip the check
         }
-        let myPID = ProcessInfo.processInfo.processIdentifier
-        let others = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
-            .filter { $0.processIdentifier != myPID }
-            .filter { $0.bundleURL?.path.hasPrefix("/Volumes/") != true }
-        guard !others.isEmpty else { return false }
+        guard !otherNonDMGInstances().isEmpty else { return false }
         NSApp.terminate(nil)
         return true
     }
