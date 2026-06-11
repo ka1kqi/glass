@@ -138,21 +138,11 @@ final class LunarTideView: NSView {
     }
 
     private func restartDrift() {
-        func wander(_ keyPath: String, from: Double, to: Double, over seconds: Double) -> CABasicAnimation {
-            let animation = CABasicAnimation(keyPath: keyPath)
-            animation.fromValue = from
-            animation.toValue = to
-            animation.duration = seconds
-            animation.autoreverses = true
-            animation.repeatCount = .infinity
-            animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-            return animation
-        }
         let w = driftSize.width
         moon.removeAllAnimations()
         swell.removeAllAnimations()
-        moon.add(wander("transform.translation.x", from: -w * 0.02, to: w * 0.02, over: 53), forKey: "x")
-        swell.add(wander("transform.translation.x", from: -w * 0.25, to: w * 0.25, over: 41), forKey: "x")
+        moon.add(LayerClock.wander("transform.translation.x", from: -w * 0.02, to: w * 0.02, over: 53), forKey: "x")
+        swell.add(LayerClock.wander("transform.translation.x", from: -w * 0.25, to: w * 0.25, over: 41), forKey: "x")
     }
 
     func setPaused(_ paused: Bool) {

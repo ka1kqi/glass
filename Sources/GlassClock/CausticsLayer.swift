@@ -113,23 +113,13 @@ final class CausticsSurfaceView: NSView {
     /// Two webs wandering on mutually prime periods; their interference
     /// is the shimmer.
     private func restartDrift() {
-        func wander(_ keyPath: String, from: Double, to: Double, over seconds: Double) -> CABasicAnimation {
-            let animation = CABasicAnimation(keyPath: keyPath)
-            animation.fromValue = from
-            animation.toValue = to
-            animation.duration = seconds
-            animation.autoreverses = true
-            animation.repeatCount = .infinity
-            animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-            return animation
-        }
         let w = driftSize.width, h = driftSize.height
         webA.removeAllAnimations()
         webB.removeAllAnimations()
-        webA.add(wander("transform.translation.x", from: -w * 0.10, to: w * 0.10, over: 17), forKey: "x")
-        webA.add(wander("transform.translation.y", from: -h * 0.06, to: h * 0.06, over: 26), forKey: "y")
-        webB.add(wander("transform.translation.x", from: w * 0.08, to: -w * 0.08, over: 19), forKey: "x")
-        webB.add(wander("transform.scale", from: 1.0, to: 1.15, over: 31), forKey: "breathe")
+        webA.add(LayerClock.wander("transform.translation.x", from: -w * 0.10, to: w * 0.10, over: 17), forKey: "x")
+        webA.add(LayerClock.wander("transform.translation.y", from: -h * 0.06, to: h * 0.06, over: 26), forKey: "y")
+        webB.add(LayerClock.wander("transform.translation.x", from: w * 0.08, to: -w * 0.08, over: 19), forKey: "x")
+        webB.add(LayerClock.wander("transform.scale", from: 1.0, to: 1.15, over: 31), forKey: "breathe")
     }
 
     func setPaused(_ paused: Bool) {

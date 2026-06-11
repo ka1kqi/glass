@@ -12,7 +12,7 @@ struct SolarAuroraLayer: NSViewRepresentable {
 
     /// Resolved once per launch. Crossing timezones mid-run shifts the
     /// palette until relaunch — acceptable for ambient decoration.
-    /// Internal so SolarAuroraDesign's rim tint samples the same place.
+    /// Internal: the rim tints and the Caustics design sample the same place.
     static let location = TimeZoneLocation.coordinates()
 
     func makeNSView(context: Context) -> AuroraDriftView { AuroraDriftView() }
@@ -141,24 +141,14 @@ final class AuroraDriftView: NSView {
     /// drift never visibly repeats. Re-added on size change (amplitudes
     /// are in points); the phase restart is invisible at these speeds.
     private func restartDrift() {
-        func wander(_ keyPath: String, from: Double, to: Double, over seconds: Double) -> CABasicAnimation {
-            let animation = CABasicAnimation(keyPath: keyPath)
-            animation.fromValue = from
-            animation.toValue = to
-            animation.duration = seconds
-            animation.autoreverses = true
-            animation.repeatCount = .infinity
-            animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-            return animation
-        }
         let dx = renderedSize.width * 0.06
         let dy = renderedSize.height * 0.05
         aurora.removeAnimation(forKey: "driftX")
         aurora.removeAnimation(forKey: "driftY")
         aurora.removeAnimation(forKey: "breathe")
-        aurora.add(wander("transform.translation.x", from: -dx, to: dx, over: 23), forKey: "driftX")
-        aurora.add(wander("transform.translation.y", from: -dy, to: dy, over: 29), forKey: "driftY")
-        aurora.add(wander("transform.scale", from: 1.0, to: 1.04, over: 37), forKey: "breathe")
+        aurora.add(LayerClock.wander("transform.translation.x", from: -dx, to: dx, over: 23), forKey: "driftX")
+        aurora.add(LayerClock.wander("transform.translation.y", from: -dy, to: dy, over: 29), forKey: "driftY")
+        aurora.add(LayerClock.wander("transform.scale", from: 1.0, to: 1.04, over: 37), forKey: "breathe")
     }
 
     /// Freezes/resumes the render-server clock for this layer.
