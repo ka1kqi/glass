@@ -1,9 +1,10 @@
 import AppKit
+import GlassClockCore
 
 /// Self-install support: when Glass is launched from a mounted disk image,
-/// copy it to /Applications (unless it's already installed), hand off to
-/// the installed copy, and quit. This keeps the DMG from ever producing a
-/// second install or a second running clock.
+/// copy it to /Applications (installing fresh, or replacing an older
+/// version), hand off to the installed copy, and quit. This keeps the DMG
+/// from ever producing a second install or a second running clock.
 @MainActor
 enum Installer {
     private static let installedPath = "/Applications/Glass.app"
@@ -23,6 +24,10 @@ enum Installer {
                 // straight from the DMG rather than dying silently.
                 return deferToExistingInstance()
             }
+        } else if installedCopyIsOlder() {
+            // Upgrade: quit the outdated copy and replace it. On failure,
+            // run from the DMG rather than handing off to stale code.
+            guard replaceInstalledCopy() else { return deferToExistingInstance() }
         }
         // Launch the installed copy, then quit this DMG-hosted one.
         // createsNewApplicationInstance is required: otherwise LaunchServices
@@ -39,6 +44,44 @@ enum Installer {
             Task { @MainActor in NSApp.terminate(nil) }
         }
         return true
+    }
+
+    /// True when the copy in /Applications reports an older
+    /// CFBundleShortVersionString than this bundle. Unreadable versions
+    /// count as not-older, so a broken read never clobbers an install.
+    private static func installedCopyIsOlder() -> Bool {
+        guard let mine = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
+              let theirs = Bundle(path: installedPath)?
+                  .infoDictionary?["CFBundleShortVersionString"] as? String
+        else { return false }
+        return BundleVersion.isVersion(theirs, olderThan: mine)
+    }
+
+    /// Quits any running non-DMG copies (they're about to be stale), then
+    /// swaps the installed bundle for this one. Termination is a polite
+    /// request, but Glass quits instantly — it holds no unsaved state.
+    private static func replaceInstalledCopy() -> Bool {
+        if let bundleID = Bundle.main.bundleIdentifier {
+            let myPID = ProcessInfo.processInfo.processIdentifier
+            let stale = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
+                .filter { $0.processIdentifier != myPID }
+                .filter { $0.bundleURL?.path.hasPrefix("/Volumes/") != true }
+            stale.forEach { $0.terminate() }
+            // Wait for them to exit (briefly) so the handed-off copy
+            // doesn't see a dying instance and defer to it.
+            let deadline = Date().addingTimeInterval(2)
+            while stale.contains(where: { !$0.isTerminated }), Date() < deadline {
+                Thread.sleep(forTimeInterval: 0.05)
+            }
+        }
+        let fm = FileManager.default
+        do {
+            try fm.removeItem(atPath: installedPath)
+            try fm.copyItem(atPath: Bundle.main.bundlePath, toPath: installedPath)
+            return true
+        } catch {
+            return false
+        }
     }
 
     /// If another copy of Glass is already running (other than one on a

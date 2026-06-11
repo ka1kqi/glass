@@ -6,8 +6,9 @@ in the native macOS style.
 ## Install (DMG)
 
 Open `Glass.dmg` and launch Glass from it — the app installs itself to
-`/Applications` on first run (it skips the copy if it's already installed)
-and hands off to the installed copy, so you never end up with two.
+`/Applications` (replacing an older installed version, or skipping the
+copy when the same or newer one is already there) and hands off to the
+installed copy, so you never end up with two.
 
 > Downloaded copies are ad-hoc signed; if macOS complains about an
 > unidentified developer, right-click the app and choose Open once.
