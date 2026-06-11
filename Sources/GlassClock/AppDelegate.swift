@@ -21,7 +21,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let keepMacAwake = SleepPreventer.systemSleep()
     private let keepDisplayAwake = SleepPreventer.displaySleep()
     /// Whether the clock floats above all windows (the classic overlay)
-    /// or behaves like a normal window other apps can cover.
+    /// or parks below every window, like a desk accessory.
     private var floatsAboveWindows =
         UserDefaults.standard.object(forKey: "GlassFloatsAboveWindows") as? Bool ?? true {
         didSet {
@@ -74,7 +74,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.zoomHaptics.register(scale)
         }
         panel.orderFrontRegardless()
-        applyWindowLevel()   // after ordering: the non-float path re-parks
+        applyWindowLevel()
         pacer.start(window: panel)
         rim.start(window: panel, pacer: pacer, lighting: lighting)
     }

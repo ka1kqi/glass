@@ -60,7 +60,7 @@ CI runs `swift test` on every push and PR. To cut a release: bump
 merge to `main`, then tag — the workflow tests, builds `Glass.dmg`, and
 publishes a GitHub Release with the DMG attached:
 
-    git tag v1.6.0 && git push origin v1.6.0
+    git tag v1.6.1 && git push origin v1.6.1
 
 ## Develop
 
