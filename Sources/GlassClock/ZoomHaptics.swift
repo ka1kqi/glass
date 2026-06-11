@@ -13,7 +13,9 @@ struct ZoomHaptics {
     mutating func register(_ scale: CGFloat) {
         defer { lastScale = scale }
         guard scale != lastScale else { return }
-        let crossedNatural = (lastScale - 1).sign != (scale - 1).sign
+        // Explicit comparisons, not .sign: (0).sign is .plus, which would
+        // miss a descent landing exactly on 1.0.
+        let crossedNatural = (lastScale > 1 && scale <= 1) || (lastScale < 1 && scale >= 1)
         let hitLimit = scale == ZoomModel.range.lowerBound
             || scale == ZoomModel.range.upperBound
         guard crossedNatural || hitLimit else { return }
