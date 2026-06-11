@@ -66,6 +66,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                   let view = self.panel.contentView else { return }
             NSMenu.popUpContextMenu(menu, with: event, for: view)
         }
+        panel.onEngaged = { [weak self] in
+            self?.raiseWhileEngaged()
+        }
         // Fires immediately with the persisted scale, which also normalizes
         // whatever size the frame autosave restored.
         zoomHaptics = ZoomHaptics(scale: zoom.scale)
@@ -122,6 +125,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSEvent.removeMonitor(parkMonitor)
             self.parkMonitor = nil
         }
+    }
+
+    /// Grabbing a parked clock brings it (and the app) forward so it can
+    /// be dragged over other windows; the park monitor then returns it
+    /// behind them on the next click into another app.
+    private func raiseWhileEngaged() {
+        guard !floatsAboveWindows else { return }
+        panel.level = .normal
+        panel.orderFrontRegardless()
+        NSApp.activate()
+        installParkMonitor()
     }
 
     /// Resizes the panel around its center to match the zoom scale.

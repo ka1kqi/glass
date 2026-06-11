@@ -41,12 +41,17 @@ final class ClockPanel: NSPanel {
     /// Called on right-click (or control-click) to show the app menu.
     var onContextClick: ((NSEvent) -> Void)?
 
+    /// Called on every left mouse-down, before drag handling — the hook
+    /// for raising a parked (non-floating) clock when the user grabs it.
+    var onEngaged: (() -> Void)?
+
     /// Pointer offset from the frame origin while dragging, screen coords.
     private var dragOffset: NSPoint?
     /// Recent (timestamp, origin) samples for the release velocity.
     private var dragSamples: [(time: TimeInterval, origin: NSPoint)] = []
 
     override func mouseDown(with event: NSEvent) {
+        onEngaged?()
         let mouse = NSEvent.mouseLocation
         dragOffset = NSPoint(x: mouse.x - frame.origin.x, y: mouse.y - frame.origin.y)
         dragSamples = [(event.timestamp, frame.origin)]
