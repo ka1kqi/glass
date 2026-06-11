@@ -59,6 +59,18 @@ final class ClockPanel: NSPanel {
         onDragEnded?(velocity)
     }
 
+    /// Routes left-mouse events straight to the drag handlers instead of
+    /// relying on the hosting view to leave them unhandled — the whole
+    /// panel surface is a drag region, like isMovableByWindowBackground.
+    override func sendEvent(_ event: NSEvent) {
+        switch event.type {
+        case .leftMouseDown: mouseDown(with: event)
+        case .leftMouseDragged: mouseDragged(with: event)
+        case .leftMouseUp: mouseUp(with: event)
+        default: super.sendEvent(event)
+        }
+    }
+
     /// Velocity over the last ~120ms of samples, so pausing mid-drag
     /// before releasing kills the toss.
     static func releaseVelocity(from samples: [(time: TimeInterval, origin: NSPoint)]) -> CGVector {
