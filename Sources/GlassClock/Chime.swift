@@ -28,6 +28,8 @@ final class Chime {
 
     private func scheduleNextHour() {
         cancel()
+        // On DST fall-back night the repeated hour can chime twice; not
+        // worth complicating the schedule over.
         let next = Calendar.current.nextDate(
             after: Date(),
             matching: DateComponents(minute: 0, second: 0),
@@ -60,7 +62,8 @@ final class Chime {
               (try? engine.start()) != nil else { return }
         self.engine = engine
         self.player = player
-        player.scheduleBuffer(buffer) { [weak self] in
+        player.scheduleBuffer(buffer, completionCallbackType: .dataPlayedBack) { [weak self, buffer] _ in
+            _ = buffer  // keep alive until the last sample leaves the hardware
             Task { @MainActor in
                 self?.engine?.stop()
                 self?.engine = nil
