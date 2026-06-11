@@ -20,12 +20,22 @@ struct StillGlassDesign: GlassDesign {
     func ambientLayer(paused: Bool) -> AnyView { AnyView(EmptyView()) }
 }
 
+/// Living glass: time-of-day aurora plus film grain.
+struct SolarAuroraDesign: GlassDesign {
+    let id = "solar-aurora"
+    let name = "Solar Aurora"
+    func ambientLayer(paused: Bool) -> AnyView {
+        AnyView(SolarAuroraLayer(paused: paused).overlay(GrainOverlay()))
+    }
+}
+
 /// Every available design, in menu order. The first entry is the default
 /// and the fallback for unknown persisted ids.
 @MainActor
 enum DesignCatalog {
     static let all: [any GlassDesign] = [
         StillGlassDesign(),
+        SolarAuroraDesign(),
     ]
 
     static func design(withID id: String) -> any GlassDesign {
