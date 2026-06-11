@@ -37,10 +37,12 @@ struct ClockView: View {
                     cornerRadius: radius)
             }
             .overlay {
+                let current = design.current
                 SpecularRimOverlay(
                     paused: pacer.paused,
                     cornerRadius: radius,
-                    windowFrame: windowFrame)
+                    windowFrame: windowFrame,
+                    tint: { current.rimTint(at: $0) })
             }
     }
 }

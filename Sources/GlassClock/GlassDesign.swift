@@ -1,4 +1,5 @@
 import SwiftUI
+import GlassClockCore
 
 /// One ambient look for the glass. A design contributes the layer
 /// rendered between the blur material and the clock digits; the rim and
@@ -11,6 +12,14 @@ protocol GlassDesign {
     var name: String { get }
     /// The ambient layer; built fresh whenever the design is applied.
     func ambientLayer(paused: Bool) -> AnyView
+    /// Color of the cursor-reactive specular arc on the rim, sampled per
+    /// frame so designs can follow the time of day.
+    func rimTint(at date: Date) -> Color
+}
+
+extension GlassDesign {
+    /// Plain glass catches plain white light.
+    func rimTint(at date: Date) -> Color { .white }
 }
 
 /// Today's look, exactly: no ambient layer at all.
@@ -26,6 +35,16 @@ struct SolarAuroraDesign: GlassDesign {
     let name = "Solar Aurora"
     func ambientLayer(paused: Bool) -> AnyView {
         AnyView(SolarAuroraLayer(paused: paused).overlay(GrainOverlay()))
+    }
+
+    /// The rim catches the aurora's own light: the mesh's center color,
+    /// lifted toward white, tracking the sun like the ambient layer does.
+    func rimTint(at date: Date) -> Color {
+        let accent = AuroraPalette.rimAccent(forElevation: SolarPosition.elevation(
+            latitude: SolarAuroraLayer.location.latitude,
+            longitude: SolarAuroraLayer.location.longitude,
+            date: date))
+        return Color(red: accent.red, green: accent.green, blue: accent.blue)
     }
 }
 
