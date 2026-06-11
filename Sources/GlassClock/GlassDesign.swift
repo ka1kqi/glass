@@ -50,6 +50,23 @@ struct SolarAuroraDesign: GlassDesign {
     }
 }
 
+/// Sunlight through water: solar-keyed water with drifting caustic webs.
+struct CausticsDesign: GlassDesign {
+    let id = "caustics"
+    let name = "Caustics"
+    func ambientLayer(paused: Bool) -> AnyView {
+        AnyView(CausticsLayer(paused: paused).opacity(0.35))
+    }
+
+    func rimTint(at date: Date) -> Color {
+        let accent = CausticsPalette.rimAccent(forElevation: SolarPosition.elevation(
+            latitude: SolarAuroraLayer.location.latitude,
+            longitude: SolarAuroraLayer.location.longitude,
+            date: date))
+        return Color(red: accent.red, green: accent.green, blue: accent.blue)
+    }
+}
+
 /// Every available design, in menu order. The first entry is the default
 /// and the fallback for unknown persisted ids.
 @MainActor
@@ -57,6 +74,7 @@ enum DesignCatalog {
     static let all: [any GlassDesign] = [
         StillGlassDesign(),
         SolarAuroraDesign(),
+        CausticsDesign(),
     ]
 
     static func design(withID id: String) -> any GlassDesign {
