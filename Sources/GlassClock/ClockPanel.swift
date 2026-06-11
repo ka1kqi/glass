@@ -14,7 +14,9 @@ final class ClockPanel: NSPanel {
         hasShadow = true
         level = .floating
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        isMovableByWindowBackground = true
+        // Dragging is manual (mouseDown/Dragged/Up below) so release
+        // velocity can drive the toss glide.
+        isMovableByWindowBackground = false
         hidesOnDeactivate = false
         isReleasedWhenClosed = false
     }
@@ -25,6 +27,67 @@ final class ClockPanel: NSPanel {
     /// Called with a multiplicative zoom factor when the user pinches or
     /// scrolls on the panel.
     var onZoom: ((CGFloat) -> Void)?
+
+    /// Called when a drag ends, with the release velocity in points/sec
+    /// (screen coordinates, y up).
+    var onDragEnded: ((CGVector) -> Void)?
+
+    /// Pointer offset from the frame origin while dragging, screen coords.
+    private var dragOffset: NSPoint?
+    /// Recent (timestamp, origin) samples for the release velocity.
+    private var dragSamples: [(time: TimeInterval, origin: NSPoint)] = []
+
+    override func mouseDown(with event: NSEvent) {
+        let mouse = NSEvent.mouseLocation
+        dragOffset = NSPoint(x: mouse.x - frame.origin.x, y: mouse.y - frame.origin.y)
+        dragSamples = [(event.timestamp, frame.origin)]
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard let offset = dragOffset else { return }
+        let mouse = NSEvent.mouseLocation
+        setFrameOrigin(NSPoint(x: mouse.x - offset.x, y: mouse.y - offset.y))
+        dragSamples.append((event.timestamp, frame.origin))
+        if dragSamples.count > 8 { dragSamples.removeFirst(dragSamples.count - 8) }
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        guard dragOffset != nil else { return }
+        dragOffset = nil
+        // A plain click (no mouseDragged samples) must not nudge the panel.
+        guard dragSamples.count > 1 else { dragSamples = []; return }
+        let velocity = Self.releaseVelocity(from: dragSamples, releasedAt: event.timestamp)
+        dragSamples = []
+        onDragEnded?(velocity)
+    }
+
+    /// Routes left-mouse events straight to the drag handlers instead of
+    /// relying on the hosting view to leave them unhandled — the whole
+    /// panel surface is a drag region, like isMovableByWindowBackground.
+    override func sendEvent(_ event: NSEvent) {
+        switch event.type {
+        case .leftMouseDown: mouseDown(with: event)
+        case .leftMouseDragged: mouseDragged(with: event)
+        case .leftMouseUp: mouseUp(with: event)
+        default: super.sendEvent(event)
+        }
+    }
+
+    /// Velocity over the last ~120ms before release. Filtering against the
+    /// release timestamp (not the last drag sample) means a flick followed
+    /// by a motionless hold releases with zero velocity.
+    static func releaseVelocity(
+        from samples: [(time: TimeInterval, origin: NSPoint)],
+        releasedAt upTime: TimeInterval
+    ) -> CGVector {
+        let recent = samples.filter { $0.time >= upTime - 0.12 }
+        guard let first = recent.first, let last = recent.last,
+              last.time > first.time else { return .zero }
+        let dt = last.time - first.time
+        return CGVector(
+            dx: (last.origin.x - first.origin.x) / dt,
+            dy: (last.origin.y - first.origin.y) / dt)
+    }
 
     override func magnify(with event: NSEvent) {
         onZoom?(clampedFactor(1 + event.magnification))

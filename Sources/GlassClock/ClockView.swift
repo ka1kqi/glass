@@ -7,13 +7,40 @@ struct ClockView: View {
 
     @ObservedObject var model: ClockModel
     @ObservedObject var zoom: ZoomModel
+    @ObservedObject var design: DesignModel
+    @ObservedObject var pacer: AmbientPacer
+    /// Panel frame in screen coordinates, for the cursor-lit rim.
+    var windowFrame: () -> NSRect? = { nil }
 
     var body: some View {
+        let radius = 24 * zoom.scale
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
         Text(model.timeString)
             .font(.system(size: 88 * zoom.scale, weight: .medium, design: .rounded))
             .foregroundStyle(.primary)
             .frame(width: Self.baseSize.width * zoom.scale,
                    height: Self.baseSize.height * zoom.scale)
-            .background(VisualEffectBackground(cornerRadius: 24 * zoom.scale))
+            .background {
+                ZStack {
+                    VisualEffectBackground(cornerRadius: radius)
+                    design.current.ambientLayer(paused: pacer.paused)
+                        .clipShape(shape)
+                        .id(design.designID)        // new identity per design…
+                        .transition(.opacity)        // …so switching cross-fades
+                }
+                .animation(.easeInOut(duration: 0.4), value: design.designID)
+            }
+            .overlay {
+                MinuteGlintOverlay(
+                    trigger: model.timeString,
+                    enabled: !pacer.paused,   // paused subsumes Reduce Motion
+                    cornerRadius: radius)
+            }
+            .overlay {
+                SpecularRimOverlay(
+                    paused: pacer.paused,
+                    cornerRadius: radius,
+                    windowFrame: windowFrame)
+            }
     }
 }

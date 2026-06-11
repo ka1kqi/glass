@@ -25,13 +25,24 @@ Or build a drag-and-drop installer disk image:
 ./make-dmg.sh   # produces build/Glass.dmg
 ```
 
-- Drag the clock anywhere; its position is remembered.
+- Drag the clock anywhere; its position is remembered. Tossing it glides
+  with a little inertia, and it settles flush onto nearby screen edges.
 - Pinch or scroll on the clock to make it bigger or smaller (0.5x–2.5x);
-  it zooms around its center and the size is remembered too.
-- The menu bar clock icon has settings: Keep Mac Awake (`caffeinate`) and
-  Keep Display Awake (`caffeinate -d`), both remembered across launches
-  and active only while Glass runs. Quit from the same menu.
+  it zooms around its center with a haptic tick at natural size, and the
+  size is remembered too.
+- Pick a look under the menu bar clock icon → Design: **Still Glass**
+  (classic frost) or **Solar Aurora** — a slow ambient gradient behind the
+  glass, tinted by the real position of the sun at your location (computed
+  offline from your timezone; no location permission). The glass edge
+  catches light from your cursor, and a subtle sheen sweeps across each
+  minute change.
+- The same menu has settings: Keep Mac Awake (`caffeinate`), Keep Display
+  Awake (`caffeinate -d`), and an off-by-default Hourly Chime (a soft
+  synthesized glass ting) — all remembered across launches.
+- Ambient effects pause automatically when the clock is hidden, the screen
+  sleeps, Low Power Mode is on, or Reduce Motion is set.
 - Follows your system 12/24-hour setting; adapts to light/dark mode.
+  Requires macOS 15.
 
 ## Develop
 
