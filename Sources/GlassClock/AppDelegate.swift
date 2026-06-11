@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let zoom = ZoomModel()
     private let design = DesignModel()
     private let pacer = AmbientPacer()
+    private var zoomHaptics = ZoomHaptics(scale: 1)
     private var zoomObserver: AnyCancellable?
     private let keepMacAwake = SleepPreventer.systemSleep()
     private let keepDisplayAwake = SleepPreventer.displaySleep()
@@ -44,8 +45,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         // Fires immediately with the persisted scale, which also normalizes
         // whatever size the frame autosave restored.
+        zoomHaptics = ZoomHaptics(scale: zoom.scale)
         zoomObserver = zoom.$scale.sink { [weak self] scale in
             self?.resizePanel(for: scale)
+            self?.zoomHaptics.register(scale)
         }
         panel.orderFrontRegardless()
         pacer.start(window: panel)
