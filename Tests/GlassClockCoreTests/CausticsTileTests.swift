@@ -39,5 +39,7 @@ import Testing
     var interior = 0.0
     for x in 0..<(size - 1) { interior += meanColumnDiff(x, x + 1) }
     interior /= Double(size - 1)
-    #expect(wrapJump <= interior * 2 + 1)
+    // Tight bound: a broken wrap puts a hard seam at the edge, which
+    // would blow far past ordinary column-to-column variation.
+    #expect(wrapJump <= interior * 1.25 + 1)
 }

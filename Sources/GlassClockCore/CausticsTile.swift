@@ -12,6 +12,7 @@ public enum CausticsTile {
         sharpness: Double = 2.4,
         seed: UInt64 = 9
     ) -> [UInt8] {
+        precondition(featureCount >= 2, "caustic web needs at least two cells")
         var rng = SplitMix64(seed: seed)
         let features = (0..<featureCount).map { _ in
             SIMD2(rng.unitDouble(), rng.unitDouble())
