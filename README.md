@@ -32,12 +32,13 @@ Or build a drag-and-drop installer disk image:
   it zooms around its center with a haptic tick at natural size, and the
   size is remembered too.
 - Right-click the clock (or use the menu bar icon) for the menu. Pick a
-  look under Design: **Still Glass**
-  (classic frost) or **Solar Aurora** — a slow ambient gradient behind the
-  glass, tinted by the real position of the sun at your location (computed
-  offline from your timezone; no location permission). The glass edge
-  catches light from your cursor, and a subtle sheen sweeps across each
-  minute change.
+  look under Design: **Still Glass** (classic frost), **Solar Aurora** — a
+  slow ambient gradient behind the glass, tinted by the real position of
+  the sun at your location (computed offline from your timezone; no
+  location permission), **Caustics** (sunlight through water, tinted by
+  the time of day), and **Lunar Tide** (a night field whose moon glow
+  follows the real lunar phase). The glass edge catches light from your
+  cursor, and a subtle sheen sweeps across each minute change.
 - The same menu has settings, all remembered across launches: Float Above
   Windows (off lets other windows cover the clock; click it to bring it
   back forward), Keep Mac Awake (`caffeinate`), Keep Display Awake
@@ -51,6 +52,15 @@ Or build a drag-and-drop installer disk image:
   Reduce Motion is set.
 - Follows your system 12/24-hour setting; adapts to light/dark mode.
   Requires macOS 15.
+
+## Release
+
+CI runs `swift test` on every push and PR. To cut a release: bump
+`CFBundleShortVersionString` (and `CFBundleVersion`) in `make-app.sh`,
+merge to `main`, then tag — the workflow tests, builds `Glass.dmg`, and
+publishes a GitHub Release with the DMG attached:
+
+    git tag v1.6.0 && git push origin v1.6.0
 
 ## Develop
 

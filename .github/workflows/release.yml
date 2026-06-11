@@ -1,0 +1,27 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify tag matches the embedded version
+        run: |
+          EMBEDDED=$(sed -n 's|.*CFBundleShortVersionString</key><string>\(.*\)</string>.*|\1|p' make-app.sh)
+          TAG="${GITHUB_REF_NAME#v}"
+          if [ "$EMBEDDED" != "$TAG" ]; then
+            echo "Tag v$TAG does not match make-app.sh version $EMBEDDED" >&2
+            exit 1
+          fi
+      - name: Run tests
+        run: swift test
+      - name: Build DMG
+        run: ./make-dmg.sh
+      - name: Create release
+        run: gh release create "$GITHUB_REF_NAME" build/Glass.dmg --generate-notes --title "Glass $GITHUB_REF_NAME"
+        env:
+          GH_TOKEN: ${{ github.token }}
