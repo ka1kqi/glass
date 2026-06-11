@@ -1,5 +1,6 @@
 import AppKit
 import Combine
+import GlassClockCore
 
 /// Publishes the cursor-driven rim light, fed by mouse-move events
 /// instead of a poll loop — the app does zero work while the cursor
@@ -70,7 +71,7 @@ final class RimLightModel: ObservableObject {
         guard force || now - lastRefresh >= 1.0 / 30.0 else { return }
         lastRefresh = now
         guard let frame = window?.frame else { return }
-        let light = SpecularRimOverlay.light(panel: frame, mouse: NSEvent.mouseLocation)
+        let light = RimLight.compute(panel: frame, mouse: NSEvent.mouseLocation)
         // Quantize (~1.3° and 0.02 steps — invisible) so a cursor sweeping
         // far across the desktop doesn't publish redundant frames.
         let quantizedIntensity = (light.intensity * 50).rounded() / 50

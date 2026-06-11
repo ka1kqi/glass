@@ -68,17 +68,7 @@ public enum AuroraPalette {
 
     /// 9 colors for the given elevation; clamps outside the anchor range.
     public static func colors(forElevation elevation: Double) -> [AuroraColor] {
-        guard elevation > anchors.first!.elevation else { return anchors.first!.colors }
-        guard elevation < anchors.last!.elevation else { return anchors.last!.colors }
-        for i in 0..<(anchors.count - 1) {
-            let low = anchors[i], high = anchors[i + 1]
-            guard elevation <= high.elevation else { continue }
-            let t = (elevation - low.elevation) / (high.elevation - low.elevation)
-            return zip(low.colors, high.colors).map { AuroraColor.lerp($0, $1, t) }
-        }
-        // Unreachable: the guards bound elevation strictly inside the
-        // anchor range, so the loop always returns.
-        return anchors.last!.colors
+        PaletteMath.interpolate(anchors: anchors, elevation: elevation)
     }
 
     /// The accent the rim's specular arc uses so reactive light matches
