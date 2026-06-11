@@ -40,8 +40,8 @@ Or build a drag-and-drop installer disk image:
   follows the real lunar phase). The glass edge catches light from your
   cursor, and a subtle sheen sweeps across each minute change.
 - The same menu has settings, all remembered across launches: Float Above
-  Windows (off lets other windows cover the clock; click it to bring it
-  back forward), Keep Mac Awake (`caffeinate`), Keep Display Awake
+  Windows (off parks the clock behind your windows, like a desk
+  accessory), Keep Mac Awake (`caffeinate`), Keep Display Awake
   (`caffeinate -d`), Lighting Effects (the cursor-lit rim and minute
   sheen), and an off-by-default Hourly Chime (a soft synthesized glass
   ting).
@@ -60,7 +60,7 @@ CI runs `swift test` on every push and PR. To cut a release: bump
 merge to `main`, then tag — the workflow tests, builds `Glass.dmg`, and
 publishes a GitHub Release with the DMG attached:
 
-    git tag v1.6.0 && git push origin v1.6.0
+    git tag v1.6.1 && git push origin v1.6.1
 
 ## Develop
 
