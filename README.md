@@ -31,7 +31,8 @@ Or build a drag-and-drop installer disk image:
 - Pinch or scroll on the clock to make it bigger or smaller (0.5x–2.5x);
   it zooms around its center with a haptic tick at natural size, and the
   size is remembered too.
-- Pick a look under the menu bar clock icon → Design: **Still Glass**
+- Right-click the clock (or use the menu bar icon) for the menu. Pick a
+  look under Design: **Still Glass**
   (classic frost) or **Solar Aurora** — a slow ambient gradient behind the
   glass, tinted by the real position of the sun at your location (computed
   offline from your timezone; no location permission). The glass edge

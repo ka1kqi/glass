@@ -7,6 +7,8 @@ import GlassClockCore
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var panel: ClockPanel!
     private var statusItem: NSStatusItem!
+    /// One menu, two doors: the status item and right-click on the clock.
+    private var menu: NSMenu!
     private let model = ClockModel()
     private let zoom = ZoomModel()
     private let design = DesignModel()
@@ -58,6 +60,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         panel.onDraggingChanged = { [weak self] dragging in
             self?.pacer.setDragging(dragging)
+        }
+        panel.onContextClick = { [weak self] event in
+            guard let self, let menu = self.menu,
+                  let view = self.panel.contentView else { return }
+            NSMenu.popUpContextMenu(menu, with: event, for: view)
         }
         // Fires immediately with the persisted scale, which also normalizes
         // whatever size the frame autosave restored.
@@ -199,6 +206,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             action: #selector(NSApplication.terminate(_:)),
             keyEquivalent: "q"))
         statusItem.menu = menu
+        self.menu = menu
     }
 
     @objc private func selectDesign(_ sender: NSMenuItem) {

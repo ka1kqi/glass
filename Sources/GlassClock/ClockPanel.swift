@@ -37,6 +37,9 @@ final class ClockPanel: NSPanel {
     /// clicks never fire it.
     var onDraggingChanged: ((Bool) -> Void)?
 
+    /// Called on right-click (or control-click) to show the app menu.
+    var onContextClick: ((NSEvent) -> Void)?
+
     /// Pointer offset from the frame origin while dragging, screen coords.
     private var dragOffset: NSPoint?
     /// Recent (timestamp, origin) samples for the release velocity.
@@ -74,11 +77,15 @@ final class ClockPanel: NSPanel {
     /// Routes left-mouse events straight to the drag handlers instead of
     /// relying on the hosting view to leave them unhandled — the whole
     /// panel surface is a drag region, like isMovableByWindowBackground.
+    /// Right-click (and the control-click idiom) opens the app menu.
     override func sendEvent(_ event: NSEvent) {
         switch event.type {
+        case .leftMouseDown where event.modifierFlags.contains(.control):
+            onContextClick?(event)
         case .leftMouseDown: mouseDown(with: event)
         case .leftMouseDragged: mouseDragged(with: event)
         case .leftMouseUp: mouseUp(with: event)
+        case .rightMouseDown: onContextClick?(event)
         default: super.sendEvent(event)
         }
     }
