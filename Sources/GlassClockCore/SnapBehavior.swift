@@ -8,6 +8,8 @@ public enum SnapBehavior {
     /// If `frame` sits within `threshold` of an edge of `visibleFrame`
     /// (checked per axis, so corners snap on both), returns the origin
     /// that puts it flush against those edges; nil when nothing is close.
+    /// When a panel is so large that both edges of one axis are within
+    /// threshold, the left/bottom edge wins.
     public static func snappedOrigin(
         for frame: CGRect,
         in visibleFrame: CGRect,

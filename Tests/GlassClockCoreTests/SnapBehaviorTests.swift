@@ -46,3 +46,18 @@ private func panel(x: CGFloat, y: CGFloat) -> CGRect {
 @Test func justBeyondThresholdDoesNotSnap() {
     #expect(SnapBehavior.snappedOrigin(for: panel(x: 125, y: 400), in: screen) == nil)
 }
+
+@Test func secondDisplayLeftOfMainSnapsAtNegativeOrigin() {
+    let leftScreen = CGRect(x: -2560, y: 0, width: 2560, height: 1440)
+    let snapped = SnapBehavior.snappedOrigin(
+        for: CGRect(x: -2550, y: 700, width: 340, height: 150), in: leftScreen)
+    #expect(snapped == CGPoint(x: -2560, y: 700))
+}
+
+@Test func panelWiderThanScreenSnapsToLeftEdge() {
+    // Width 1500 > screen 1440 puts both vertical edges within threshold;
+    // the left edge wins.
+    let wide = CGRect(x: 98, y: 400, width: 1500, height: 150)
+    let snapped = SnapBehavior.snappedOrigin(for: wide, in: screen)
+    #expect(snapped?.x == screen.minX)
+}
