@@ -1,4 +1,5 @@
 import AppKit
+import GlassClockCore
 
 /// Borderless glass panel that floats above all windows, on every Space
 /// and over fullscreen apps, draggable from anywhere on its surface.
@@ -69,7 +70,7 @@ final class ClockPanel: NSPanel {
         // A plain click (no mouseDragged samples) must not nudge the panel.
         guard dragSamples.count > 1 else { dragSamples = []; return }
         onDraggingChanged?(false)
-        let velocity = Self.releaseVelocity(from: dragSamples, releasedAt: event.timestamp)
+        let velocity = DragMath.releaseVelocity(samples: dragSamples, releasedAt: event.timestamp)
         dragSamples = []
         onDragEnded?(velocity)
     }
@@ -88,22 +89,6 @@ final class ClockPanel: NSPanel {
         case .rightMouseDown: onContextClick?(event)
         default: super.sendEvent(event)
         }
-    }
-
-    /// Velocity over the last ~120ms before release. Filtering against the
-    /// release timestamp (not the last drag sample) means a flick followed
-    /// by a motionless hold releases with zero velocity.
-    static func releaseVelocity(
-        from samples: [(time: TimeInterval, origin: NSPoint)],
-        releasedAt upTime: TimeInterval
-    ) -> CGVector {
-        let recent = samples.filter { $0.time >= upTime - 0.12 }
-        guard let first = recent.first, let last = recent.last,
-              last.time > first.time else { return .zero }
-        let dt = last.time - first.time
-        return CGVector(
-            dx: (last.origin.x - first.origin.x) / dt,
-            dy: (last.origin.y - first.origin.y) / dt)
     }
 
     override func magnify(with event: NSEvent) {
