@@ -47,9 +47,6 @@ final class ClockPanel: NSPanel {
     private var dragSamples: [(time: TimeInterval, origin: NSPoint)] = []
 
     override func mouseDown(with event: NSEvent) {
-        // At normal level (Float Above Windows off) a click brings the
-        // clock back in front of whatever covered it.
-        if level == .normal { orderFront(nil) }
         let mouse = NSEvent.mouseLocation
         dragOffset = NSPoint(x: mouse.x - frame.origin.x, y: mouse.y - frame.origin.y)
         dragSamples = [(event.timestamp, frame.origin)]

@@ -73,14 +73,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.resizePanel(for: scale)
             self?.zoomHaptics.register(scale)
         }
-        applyWindowLevel()
         panel.orderFrontRegardless()
+        applyWindowLevel()   // after ordering: the non-float path re-parks
         pacer.start(window: panel)
         rim.start(window: panel, pacer: pacer, lighting: lighting)
     }
 
+    /// One step below normal: every standard window stacks above it.
+    private static let deskAccessoryLevel =
+        NSWindow.Level(rawValue: NSWindow.Level.normal.rawValue - 1)
+
     private func applyWindowLevel() {
-        panel.level = floatsAboveWindows ? .floating : .normal
+        // Glass never activates, so at .normal level it would strand
+        // itself on top of the active app (nothing re-raises an already
+        // active app, and canJoinAllSpaces panels get re-asserted forward
+        // on every Space switch — ordering games lose that race). A level
+        // below normal sidesteps all of it: with float off, the clock is
+        // a desk accessory that lives behind every window, always.
+        panel.level = floatsAboveWindows ? .floating : Self.deskAccessoryLevel
     }
 
     /// Resizes the panel around its center to match the zoom scale.
@@ -161,7 +171,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             keyEquivalent: "")
         floatItem.target = self
         floatItem.state = floatsAboveWindows ? .on : .off
-        floatItem.toolTip = "Off lets other windows cover the clock"
+        floatItem.toolTip = "Off keeps the clock behind your windows"
         menu.addItem(floatItem)
 
         let macAwakeItem = NSMenuItem(
