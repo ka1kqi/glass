@@ -50,3 +50,9 @@ import Testing
         #expect(abs(mid[i].blue - expected.blue) < 0.001)
     }
 }
+
+@Test func anchorBoundariesMatchLiteralColors() {
+    // Guards clamp AT the boundary anchors too — straight to the literals.
+    #expect(AuroraPalette.colors(forElevation: -12)[0] == AuroraColor(hex: 0x0B0B26))
+    #expect(AuroraPalette.colors(forElevation: 25)[0] == AuroraColor(hex: 0xAFC8D8))
+}

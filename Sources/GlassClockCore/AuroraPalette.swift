@@ -3,9 +3,9 @@ import Foundation
 /// An sRGB color value kept in core (no SwiftUI) so palette math stays
 /// unit-testable; the app maps these onto SwiftUI colors.
 public struct AuroraColor: Equatable, Sendable {
-    public var red: Double
-    public var green: Double
-    public var blue: Double
+    public let red: Double
+    public let green: Double
+    public let blue: Double
 
     public init(red: Double, green: Double, blue: Double) {
         self.red = red
@@ -76,6 +76,8 @@ public enum AuroraPalette {
             let t = (elevation - low.elevation) / (high.elevation - low.elevation)
             return zip(low.colors, high.colors).map { AuroraColor.lerp($0, $1, t) }
         }
+        // Unreachable: the guards bound elevation strictly inside the
+        // anchor range, so the loop always returns.
         return anchors.last!.colors
     }
 
