@@ -18,6 +18,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var zoomObserver: AnyCancellable?
     private let keepMacAwake = SleepPreventer.systemSleep()
     private let keepDisplayAwake = SleepPreventer.displaySleep()
+    /// Whether the clock floats above all windows (the classic overlay)
+    /// or behaves like a normal window other apps can cover.
+    private var floatsAboveWindows =
+        UserDefaults.standard.object(forKey: "GlassFloatsAboveWindows") as? Bool ?? true {
+        didSet {
+            UserDefaults.standard.set(floatsAboveWindows, forKey: "GlassFloatsAboveWindows")
+            applyWindowLevel()
+        }
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         if Installer.handOffToInstalledCopyIfNeeded() { return }
@@ -57,9 +66,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.resizePanel(for: scale)
             self?.zoomHaptics.register(scale)
         }
+        applyWindowLevel()
         panel.orderFrontRegardless()
         pacer.start(window: panel)
         rim.start(window: panel, pacer: pacer, lighting: lighting)
+    }
+
+    private func applyWindowLevel() {
+        panel.level = floatsAboveWindows ? .floating : .normal
     }
 
     /// Resizes the panel around its center to match the zoom scale.
@@ -134,6 +148,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(designItem)
         menu.addItem(.separator())
 
+        let floatItem = NSMenuItem(
+            title: "Float Above Windows",
+            action: #selector(toggleFloat(_:)),
+            keyEquivalent: "")
+        floatItem.target = self
+        floatItem.state = floatsAboveWindows ? .on : .off
+        floatItem.toolTip = "Off lets other windows cover the clock"
+        menu.addItem(floatItem)
+
         let macAwakeItem = NSMenuItem(
             title: "Keep Mac Awake",
             action: #selector(toggleKeepMacAwake(_:)),
@@ -194,6 +217,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func toggleKeepDisplayAwake(_ sender: NSMenuItem) {
         keepDisplayAwake.toggle()
         sender.state = keepDisplayAwake.isOn ? .on : .off
+    }
+
+    @objc private func toggleFloat(_ sender: NSMenuItem) {
+        floatsAboveWindows.toggle()
+        sender.state = floatsAboveWindows ? .on : .off
     }
 
     @objc private func toggleLighting(_ sender: NSMenuItem) {
