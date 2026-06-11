@@ -15,6 +15,7 @@ final class AmbientPacer: ObservableObject {
 
     /// Begins observing; call once after the panel exists.
     func start(window: NSWindow) {
+        guard self.window == nil else { return }  // observers register once
         self.window = window
         let center = NotificationCenter.default
         let workspace = NSWorkspace.shared.notificationCenter
