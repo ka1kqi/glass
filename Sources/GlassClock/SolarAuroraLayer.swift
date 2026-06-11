@@ -32,7 +32,7 @@ struct SolarAuroraLayer: View {
     /// Corners stay pinned and edge midpoints drift only along their own
     /// edge (MeshGradient requires boundary points on the boundary); the
     /// periods are mutually prime so the field never visibly repeats.
-    static func points(at t: TimeInterval) -> [SIMD2<Float>] {
+    private static func points(at t: TimeInterval) -> [SIMD2<Float>] {
         func drift(
             _ base: SIMD2<Float>,
             dx: Float, dy: Float,
