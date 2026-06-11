@@ -83,14 +83,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private static let deskAccessoryLevel =
         NSWindow.Level(rawValue: NSWindow.Level.normal.rawValue - 1)
 
+    private var parkMonitor: Any?
+
     private func applyWindowLevel() {
-        // Glass never activates, so at .normal level it would strand
-        // itself on top of the active app (nothing re-raises an already
-        // active app, and canJoinAllSpaces panels get re-asserted forward
-        // on every Space switch — ordering games lose that race). A level
-        // below normal sidesteps all of it: with float off, the clock is
-        // a desk accessory that lives behind every window, always.
-        panel.level = floatsAboveWindows ? .floating : Self.deskAccessoryLevel
+        if floatsAboveWindows {
+            panel.level = .floating
+            removeParkMonitor()
+        } else {
+            // Fresh launches (and the just-unchecked moment) keep the
+            // clock visible up top; the first click into any other app
+            // parks it below the normal band. The level-based park is
+            // what makes "behind" stick — Glass never activates, so at
+            // .normal it would strand itself above the active app, and
+            // ordering games lose to the canJoinAllSpaces re-assertion
+            // on Space switches.
+            panel.level = .normal
+            installParkMonitor()
+        }
+    }
+
+    /// One-shot: global monitors only see clicks in OTHER apps, so the
+    /// first event means the user went back to their work.
+    private func installParkMonitor() {
+        guard parkMonitor == nil else { return }
+        parkMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown]) { [weak self] _ in
+            Task { @MainActor in
+                guard let self else { return }
+                self.removeParkMonitor()
+                if !self.floatsAboveWindows {
+                    self.panel.level = Self.deskAccessoryLevel
+                }
+            }
+        }
+    }
+
+    private func removeParkMonitor() {
+        if let parkMonitor {
+            NSEvent.removeMonitor(parkMonitor)
+            self.parkMonitor = nil
+        }
     }
 
     /// Resizes the panel around its center to match the zoom scale.
