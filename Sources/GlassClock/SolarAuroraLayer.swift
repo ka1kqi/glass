@@ -161,21 +161,14 @@ final class AuroraDriftView: NSView {
         aurora.add(wander("transform.scale", from: 1.0, to: 1.04, over: 37), forKey: "breathe")
     }
 
-    /// Freezes/resumes the render-server clock for this layer — the
-    /// standard CoreAnimation pause idiom.
+    /// Freezes/resumes the render-server clock for this layer.
     func setPaused(_ paused: Bool) {
         guard paused != isPaused else { return }
         isPaused = paused
         if paused {
-            let now = aurora.convertTime(CACurrentMediaTime(), from: nil)
-            aurora.speed = 0
-            aurora.timeOffset = now
+            LayerClock.pause(aurora)
         } else {
-            let frozenAt = aurora.timeOffset
-            aurora.speed = 1
-            aurora.timeOffset = 0
-            aurora.beginTime = 0
-            aurora.beginTime = aurora.convertTime(CACurrentMediaTime(), from: nil) - frozenAt
+            LayerClock.resume(aurora)
             renderAurora(crossfade: false)  // catch the palette up
         }
     }
