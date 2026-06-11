@@ -41,8 +41,9 @@ Or build a drag-and-drop installer disk image:
   cursor, and a subtle sheen sweeps across each minute change.
 - The same menu has settings, all remembered across launches: Float Above
   Windows (off parks the clock behind your windows like a desk accessory —
-  it stays visible at launch until your first click into another app),
-  Keep Mac Awake (`caffeinate`), Keep Display Awake
+  it comes forward at launch or whenever you grab it, and recedes again on
+  your next click into another app), Keep Mac Awake (`caffeinate`),
+  Keep Display Awake
   (`caffeinate -d`), Lighting Effects (the cursor-lit rim and minute
   sheen), and an off-by-default Hourly Chime (a soft synthesized glass
   ting).
