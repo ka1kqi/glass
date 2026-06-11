@@ -9,6 +9,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private let model = ClockModel()
     private let zoom = ZoomModel()
+    private let design = DesignModel()
+    private let pacer = AmbientPacer()
     private var zoomObserver: AnyCancellable?
     private let keepMacAwake = SleepPreventer.systemSleep()
     private let keepDisplayAwake = SleepPreventer.displaySleep()
@@ -23,7 +25,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setUpPanel() {
         panel = ClockPanel(contentRect: NSRect(origin: .zero, size: ClockView.baseSize))
-        let hosting = NSHostingView(rootView: ClockView(model: model, zoom: zoom))
+        let hosting = NSHostingView(rootView: ClockView(
+            model: model, zoom: zoom, design: design, pacer: pacer,
+            windowFrame: { [weak self] in self?.panel?.frame }))
         // The panel's frame is driven exclusively by resizePanel(for:).
         // Without this, the hosting view's auto-layout constraints fight
         // every frame change (snapping it back top-left-anchored) until
@@ -41,6 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.resizePanel(for: scale)
         }
         panel.orderFrontRegardless()
+        pacer.start(window: panel)
     }
 
     /// Resizes the panel around its center to match the zoom scale.
@@ -60,6 +65,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.button?.image = NSImage(
             systemSymbolName: "clock", accessibilityDescription: "Glass")
         let menu = NSMenu()
+
+        let designItem = NSMenuItem(title: "Design", action: nil, keyEquivalent: "")
+        let designMenu = NSMenu()
+        for entry in DesignCatalog.all {
+            let item = NSMenuItem(
+                title: entry.name,
+                action: #selector(selectDesign(_:)),
+                keyEquivalent: "")
+            item.target = self
+            item.representedObject = entry.id
+            item.state = design.designID == entry.id ? .on : .off
+            designMenu.addItem(item)
+        }
+        designItem.submenu = designMenu
+        menu.addItem(designItem)
+        menu.addItem(.separator())
 
         let macAwakeItem = NSMenuItem(
             title: "Keep Mac Awake",
@@ -85,6 +106,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             action: #selector(NSApplication.terminate(_:)),
             keyEquivalent: "q"))
         statusItem.menu = menu
+    }
+
+    @objc private func selectDesign(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? String else { return }
+        design.designID = id
+        sender.menu?.items.forEach {
+            $0.state = ($0.representedObject as? String) == id ? .on : .off
+        }
     }
 
     @objc private func toggleKeepMacAwake(_ sender: NSMenuItem) {
