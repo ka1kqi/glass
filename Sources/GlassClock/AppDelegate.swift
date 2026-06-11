@@ -39,6 +39,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         panel.setFrameAutosaveName("GlassClockPanel")
         panel.onZoom = { [zoom] factor in zoom.zoom(by: factor) }
+        panel.onDragEnded = { [weak self] velocity in
+            self?.settlePanel(velocity: velocity)
+        }
         // Fires immediately with the persisted scale, which also normalizes
         // whatever size the frame autosave restored.
         zoomObserver = zoom.$scale.sink { [weak self] scale in
@@ -57,6 +60,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         frame.origin.y -= (newSize.height - frame.height) / 2
         frame.size = newSize
         panel.setFrame(frame, display: true)
+    }
+
+    /// Carries a little release velocity (the toss), then snaps to a
+    /// nearby screen edge — both with one soft-spring animation.
+    private func settlePanel(velocity: CGVector) {
+        guard let visible = (panel.screen ?? NSScreen.main)?.visibleFrame else { return }
+        var target = panel.frame
+
+        if !pacer.reduceMotion {
+            // ~60ms of glide, capped so a flick never launches the panel.
+            let glideX = min(max(velocity.dx * 0.06, -40), 40)
+            let glideY = min(max(velocity.dy * 0.06, -40), 40)
+            if abs(glideX) > 1 || abs(glideY) > 1 {
+                target.origin.x += glideX
+                target.origin.y += glideY
+                // The glide itself never pushes the panel off-screen
+                // (deliberate partial-offscreen placement stays untouched
+                // because a still release has no glide).
+                target.origin.x = min(max(target.origin.x, visible.minX),
+                                      visible.maxX - target.width)
+                target.origin.y = min(max(target.origin.y, visible.minY),
+                                      visible.maxY - target.height)
+            }
+        }
+
+        if let snapped = SnapBehavior.snappedOrigin(for: target, in: visible) {
+            target.origin = snapped
+        }
+        guard target.origin != panel.frame.origin else { return }
+
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = pacer.reduceMotion ? 0 : 0.35
+            // Ease-out with a touch of overshoot — the soft-spring settle.
+            context.timingFunction = CAMediaTimingFunction(controlPoints: 0.34, 1.3, 0.64, 1)
+            panel.animator().setFrame(target, display: true)
+        }
     }
 
     private func setUpStatusItem() {

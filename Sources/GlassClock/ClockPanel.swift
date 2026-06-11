@@ -14,7 +14,9 @@ final class ClockPanel: NSPanel {
         hasShadow = true
         level = .floating
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        isMovableByWindowBackground = true
+        // Dragging is manual (mouseDown/Dragged/Up below) so release
+        // velocity can drive the toss glide.
+        isMovableByWindowBackground = false
         hidesOnDeactivate = false
         isReleasedWhenClosed = false
     }
@@ -25,6 +27,49 @@ final class ClockPanel: NSPanel {
     /// Called with a multiplicative zoom factor when the user pinches or
     /// scrolls on the panel.
     var onZoom: ((CGFloat) -> Void)?
+
+    /// Called when a drag ends, with the release velocity in points/sec
+    /// (screen coordinates, y up).
+    var onDragEnded: ((CGVector) -> Void)?
+
+    /// Pointer offset from the frame origin while dragging, screen coords.
+    private var dragOffset: NSPoint?
+    /// Recent (timestamp, origin) samples for the release velocity.
+    private var dragSamples: [(time: TimeInterval, origin: NSPoint)] = []
+
+    override func mouseDown(with event: NSEvent) {
+        let mouse = NSEvent.mouseLocation
+        dragOffset = NSPoint(x: mouse.x - frame.origin.x, y: mouse.y - frame.origin.y)
+        dragSamples = [(event.timestamp, frame.origin)]
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard let offset = dragOffset else { return }
+        let mouse = NSEvent.mouseLocation
+        setFrameOrigin(NSPoint(x: mouse.x - offset.x, y: mouse.y - offset.y))
+        dragSamples.append((event.timestamp, frame.origin))
+        if dragSamples.count > 8 { dragSamples.removeFirst(dragSamples.count - 8) }
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        guard dragOffset != nil else { return }
+        dragOffset = nil
+        let velocity = Self.releaseVelocity(from: dragSamples)
+        dragSamples = []
+        onDragEnded?(velocity)
+    }
+
+    /// Velocity over the last ~120ms of samples, so pausing mid-drag
+    /// before releasing kills the toss.
+    static func releaseVelocity(from samples: [(time: TimeInterval, origin: NSPoint)]) -> CGVector {
+        guard let last = samples.last else { return .zero }
+        let recent = samples.filter { $0.time >= last.time - 0.12 }
+        guard let first = recent.first, last.time > first.time else { return .zero }
+        let dt = last.time - first.time
+        return CGVector(
+            dx: (last.origin.x - first.origin.x) / dt,
+            dy: (last.origin.y - first.origin.y) / dt)
+    }
 
     override func magnify(with event: NSEvent) {
         onZoom?(clampedFactor(1 + event.magnification))
