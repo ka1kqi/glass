@@ -51,3 +51,12 @@ AU	-3352+15113	Australia/Sydney	New South Wales (most areas)
     #expect(abs(coords.latitude) <= 90)
     #expect(abs(coords.longitude) <= 180)
 }
+
+@Test func fallbackWrapsLongitudePastAntimeridian() {
+    // UTC+14 (e.g. Pacific/Kiritimati) is geographically at ~−150°,
+    // not +210°.
+    let utc14 = TimeZone(secondsFromGMT: 14 * 3600)!
+    let coords = TimeZoneLocation.fallbackCoordinates(for: utc14)
+    #expect(abs(coords.longitude - -150) < 0.001)
+    #expect(abs(coords.longitude) <= 180)
+}

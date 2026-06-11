@@ -19,8 +19,18 @@ public enum TimeZoneLocation {
                 return found
             }
         }
-        // 15° of longitude per hour of UTC offset; latitude is a guess.
-        return (35.0, Double(timeZone.secondsFromGMT()) / 3600 * 15)
+        return fallbackCoordinates(for: timeZone)
+    }
+
+    /// 15° of longitude per hour of UTC offset; latitude is a guess.
+    /// UTC+13/+14 zones wrap past the antimeridian back into range.
+    static func fallbackCoordinates(
+        for timeZone: TimeZone
+    ) -> (latitude: Double, longitude: Double) {
+        var longitude = Double(timeZone.secondsFromGMT()) / 3600 * 15
+        if longitude > 180 { longitude -= 360 }
+        if longitude < -180 { longitude += 360 }
+        return (35.0, longitude)
     }
 
     /// Parses zone.tab content: tab-separated lines of
@@ -31,7 +41,7 @@ public enum TimeZoneLocation {
         for line in table.split(separator: "\n") {
             guard !line.hasPrefix("#") else { continue }
             let fields = line.split(separator: "\t")
-            guard fields.count >= 3, String(fields[2]) == identifier else { continue }
+            guard fields.count >= 3, fields[2] == identifier else { continue }
             return parseISO6709(String(fields[1]))
         }
         return nil
