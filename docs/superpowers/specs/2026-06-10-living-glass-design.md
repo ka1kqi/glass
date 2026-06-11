@@ -115,7 +115,9 @@ for future designs. One render path, no fallbacks.
   menu (persisted in `UserDefaults`). On the hour, a soft glass "ting" —
   synthesized at runtime with `AVAudioEngine` (decaying sine partials, like
   tapping a wineglass), no bundled audio asset. Respects the system output
-  device and never plays while paused/asleep.
+  device. Audio pauses only for sleep and Low Power Mode — occlusion and
+  Reduce Motion are visual concerns and do not mute an explicitly enabled
+  chime.
 
 ## Architecture
 
