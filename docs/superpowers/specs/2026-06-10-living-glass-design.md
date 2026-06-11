@@ -35,8 +35,8 @@ for future designs. One render path, no fallbacks.
 ### Design system
 
 - A `GlassDesign` protocol: a design has a stable `id` (persisted), a display
-  `name`, an ambient SwiftUI layer builder, and optional accent parameters used
-  by the rim/glint overlays.
+  `name`, and an ambient SwiftUI layer builder. (Per-design accent parameters
+  for the rim/glint overlays are deferred until a design needs them — YAGNI.)
 - A `DesignCatalog` listing available designs in menu order.
 - Selection persists in `UserDefaults` (key `GlassDesign`); unknown/missing ids
   fall back to the default design.
@@ -83,9 +83,9 @@ for future designs. One render path, no fallbacks.
 ### Minute glint (all designs)
 
 - When the displayed time changes, a diagonal bar of white light sweeps once
-  across the panel: ~650 ms, −45°, slightly blurred, ~8% peak opacity, masked
+  across the panel: ~650 ms, 45°, slightly blurred, ~8% peak opacity, masked
   to the glass shape. Triggered by the existing `ClockModel` minute tick; never
-  loops.
+  loops, and never fires while ambient animation is paused.
 
 ### Energy discipline
 
@@ -125,8 +125,9 @@ ClockView (layer stack, bottom → top)
   AmbientDesignLayer          selected GlassDesign's view, low opacity
   GrainOverlay                static noise, ~4%
   Time text                   existing
-  SpecularRimOverlay          cursor-lit arc on the hairline rim
   MinuteGlintOverlay          one-shot sweep on minute change
+  SpecularRimOverlay          cursor-lit arc on the hairline rim (topmost,
+                              so the hairline is never washed by the glint)
 ```
 
 ### Components
@@ -152,9 +153,9 @@ ClockView (layer stack, bottom → top)
 
 `AmbientPacer` publishes `paused` → all `TimelineView`s take it as their
 `paused:` argument. `DesignModel` publishes the selected design → `ClockView`
-swaps the ambient layer with a cross-fade. Once per minute (piggybacking on the
-existing `ClockModel` tick) the aurora recomputes solar elevation and retargets
-its palette; mesh point drift is purely time-based in the shader-rate timeline.
+swaps the ambient layer with a cross-fade. The aurora recomputes solar
+elevation inside its 15 fps timeline (a handful of trig calls — cheaper than
+plumbing a separate minute hook); mesh point drift is purely time-based.
 
 ## Error handling
 
