@@ -67,6 +67,21 @@ struct CausticsDesign: GlassDesign {
     }
 }
 
+/// A constant night field that follows the real moon.
+struct LunarTideDesign: GlassDesign {
+    let id = "lunar-tide"
+    let name = "Lunar Tide"
+    func ambientLayer(paused: Bool) -> AnyView {
+        AnyView(LunarTideLayer(paused: paused).opacity(0.45))
+    }
+
+    func rimTint(at date: Date) -> Color {
+        let accent = LunarPalette.rimAccent(
+            illumination: LunarPhase.illumination(at: date))
+        return Color(red: accent.red, green: accent.green, blue: accent.blue)
+    }
+}
+
 /// Every available design, in menu order. The first entry is the default
 /// and the fallback for unknown persisted ids.
 @MainActor
@@ -75,6 +90,7 @@ enum DesignCatalog {
         StillGlassDesign(),
         SolarAuroraDesign(),
         CausticsDesign(),
+        LunarTideDesign(),
     ]
 
     static func design(withID id: String) -> any GlassDesign {
